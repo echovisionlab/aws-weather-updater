@@ -24,7 +24,9 @@ func main() {
 	)
 
 	defer func() {
-		recover()
+		if r := recover(); r != nil {
+			slog.Warn(fmt.Sprintf("recovered from panic: %s", r))
+		}
 		if db != nil {
 			closeDatabase(db)
 		}
@@ -66,11 +68,9 @@ func main() {
 		return
 	}
 
-	select {
-	case <-exit:
-		scheduler.Stop()
-		slog.Info("bye")
-	}
+	<-exit
+	scheduler.Stop()
+	slog.Info("stopped scheduler. exiting...")
 }
 
 func closeDatabase(db database.Database) {
