@@ -4,68 +4,14 @@ import (
 	"context"
 	"fmt"
 	"github.com/echovisionlab/aws-weather-updater/internal/testutil"
-	"github.com/echovisionlab/aws-weather-updater/lib/database"
-	"github.com/echovisionlab/aws-weather-updater/lib/model"
-	"github.com/echovisionlab/aws-weather-updater/lib/types/fetchresult"
-	"github.com/google/uuid"
+	"github.com/echovisionlab/aws-weather-updater/pkg/database"
+	"github.com/echovisionlab/aws-weather-updater/pkg/model"
 	"github.com/stretchr/testify/assert"
 	"math/rand"
 	"strconv"
-	"sync"
 	"testing"
 	"time"
 )
-
-func TestRun(t *testing.T) {
-	container := testutil.SetupPostgres(context.Background(), t)
-	defer testutil.ShutdownContainer(context.Background(), t, container)
-
-	stations := getStations(10)
-	records := getRecords(stations)
-	f := fetchresult.New(stations, records)
-	db, err := database.NewDatabase()
-	assert.NoError(t, err)
-
-	t.Run("context canceled", func(t *testing.T) {
-		ctx, cancel := context.WithCancel(context.Background())
-		cancel()
-		var wg sync.WaitGroup
-		wg.Add(1)
-		err = Run(ctx, &wg, db, f)
-		assert.ErrorIs(t, err, context.Canceled)
-	})
-
-	t.Run("context timed out", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(context.Background(), time.Microsecond)
-		defer cancel()
-		var wg sync.WaitGroup
-		wg.Add(1)
-		err = Run(ctx, &wg, db, f)
-		assert.ErrorIs(t, err, context.DeadlineExceeded)
-	})
-
-	t.Run("must update", func(t *testing.T) {
-		var wg sync.WaitGroup
-		wg.Add(1)
-		err = Run(context.Background(), &wg, db, f)
-		assert.NoError(t, err)
-
-		var (
-			qs []model.Station
-			qr []model.Record
-		)
-		assert.NoError(t, db.SelectContext(context.Background(), &qs, "SELECT * FROM realtime_weather_station"))
-		assert.NoError(t, db.SelectContext(context.Background(), &qr, "SELECT * FROM realtime_weather_record"))
-
-		for _, station := range qs {
-			assert.Contains(t, stations, station)
-		}
-		for _, record := range qr {
-			record.Time = record.Time.In(time.UTC)
-			assert.Contains(t, records, record)
-		}
-	})
-}
 
 func TestContainerUpdate(t *testing.T) {
 	container := testutil.SetupPostgres(context.Background(), t)
@@ -83,7 +29,7 @@ func TestContainerUpdate(t *testing.T) {
 		size := rand.Intn(100) + 5
 		stations = getStations(size)
 
-		count, err := updateStations(context.Background(), db, stations)
+		count, err := Stations(context.Background(), db, stations)
 		assert.NoError(t, err)
 		assert.Equal(t, int64(size), count)
 
@@ -102,7 +48,7 @@ func TestContainerUpdate(t *testing.T) {
 		stationCnt := len(stations)
 
 		records := getRecords(stations)
-		updated, err := updateRecords(context.Background(), db, records)
+		updated, err := Records(context.Background(), db, records)
 
 		assert.NoError(t, err)
 		assert.Equal(t, updated, int64(stationCnt))
@@ -111,8 +57,10 @@ func TestContainerUpdate(t *testing.T) {
 		assert.NoError(t, db.SelectContext(context.Background(), &queriedRecords, "SELECT * FROM realtime_weather_record"))
 
 		for i, qRec := range queriedRecords {
+			assert.NotEqual(t, records[i].Id, qRec.Id)
+			records[i].Id = qRec.Id
 			qRec.Time = qRec.Time.In(time.UTC)
-			assert.Equal(t, qRec, records[i])
+			assert.Equal(t, records[i], qRec)
 		}
 	})
 }
@@ -148,7 +96,6 @@ func getStation(id int) model.Station {
 
 func getRecord(stationID int) model.Record {
 	return model.Record{
-		Id:                      uuid.New(),
 		StationID:               stationID,
 		RainAcc:                 rand.Float32(),
 		RainFifteen:             rand.Float32(),

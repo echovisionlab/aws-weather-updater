@@ -2,8 +2,7 @@ package database
 
 import (
 	"fmt"
-	"github.com/echovisionlab/aws-weather-updater/lib/constants"
-	"github.com/echovisionlab/aws-weather-updater/lib/env"
+	"github.com/echovisionlab/aws-weather-updater/pkg/env"
 	"os"
 )
 
@@ -36,10 +35,10 @@ func readDatabaseConfig() (*config, error) {
 		return nil, err
 	}
 	return &config{
-		Name: os.Getenv(constants.DatabaseName),
-		User: os.Getenv(constants.DatabaseUser),
-		Pass: os.Getenv(constants.DatabasePass),
-		Host: os.Getenv(constants.DatabaseHost),
-		Port: os.Getenv(constants.DatabasePort),
+		Name: os.Getenv(env.DatabaseName),
+		User: os.Getenv(env.DatabaseUser),
+		Pass: os.Getenv(env.DatabasePass),
+		Host: os.Getenv(env.DatabaseHost),
+		Port: os.Getenv(env.DatabasePort),
 	}, nil
 }

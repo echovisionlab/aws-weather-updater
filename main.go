@@ -2,67 +2,75 @@ package main
 
 import (
 	"context"
-	"github.com/echovisionlab/aws-weather-updater/lib/database"
-	"github.com/echovisionlab/aws-weather-updater/lib/fetch"
-	"github.com/echovisionlab/aws-weather-updater/lib/types/fetchresult"
-	"github.com/echovisionlab/aws-weather-updater/lib/update"
+	"fmt"
+	"github.com/echovisionlab/aws-weather-updater/pkg/browser"
+	"github.com/echovisionlab/aws-weather-updater/pkg/database"
+	"github.com/echovisionlab/aws-weather-updater/pkg/task"
+	"github.com/go-rod/rod"
+	"github.com/go-rod/rod/lib/launcher"
+	"github.com/madflojo/tasks"
 	"log/slog"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
-	"time"
 )
 
 func main() {
+	var (
+		db  database.Database
+		b   *rod.Browser
+		l   *launcher.Launcher
+		err error
+	)
+
+	defer func() {
+		recover()
+		if db != nil {
+			closeDatabase(db)
+		}
+		if b != nil {
+			b.MustClose()
+		}
+		if l != nil {
+			l.Cleanup()
+		}
+		slog.Info("bye")
+	}()
+
 	// init DB
-	db, err := database.NewDatabase()
+	db, err = database.NewDatabase()
 	if err != nil {
 		slog.Error(err.Error())
 		return
 	}
-	defer closeDatabase(db)
+
+	// init browser
+	b, l, err = browser.New()
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
 	slog.Info("established database connection")
 
 	// prepare
 	exit := make(chan os.Signal, 1)
 	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
-	var wg sync.WaitGroup
-	fetchResultChan := make(chan fetchresult.FetchResult)
-	errorChan := make(chan error)
-	ctx, cancel := context.WithCancel(context.Background())
-
 	slog.Info("starting update...")
-	// run
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		if r, err := fetch.StationsAndRecords(ctx, time.Now()); err != nil {
-			errorChan <- err
-		} else {
-			slog.Info("fetched new data. updating...")
-			fetchResultChan <- r
-		}
-	}()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	scheduler := tasks.New()
+	if err = scheduler.AddWithID("update", task.Update(ctx, db, b)); err != nil {
+		slog.Error(fmt.Sprintf("failed to add task: %s", err.Error()))
+		return
+	}
 
 	select {
 	case <-exit:
-		slog.Info("operation cancelled")
-		cancel()
-	case r := <-fetchResultChan:
-		wg.Add(1)
-		if err := update.Run(ctx, &wg, db, r); err != nil { // blocking intentionally
-			slog.Error(err.Error())
-		} else {
-			slog.Info("updated stations and records")
-		}
-	case err := <-errorChan:
-		slog.Error(err.Error())
-		cancel()
+		scheduler.Stop()
+		slog.Info("bye")
 	}
-
-	wg.Wait()
-	slog.Info("goodbye...")
 }
 
 func closeDatabase(db database.Database) {

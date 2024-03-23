@@ -1,6 +1,6 @@
 package fetchresult
 
-import "github.com/echovisionlab/aws-weather-updater/lib/model"
+import "github.com/echovisionlab/aws-weather-updater/pkg/model"
 
 type FetchResult interface {
 	Stations() []model.Station

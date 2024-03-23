@@ -1,14 +1,14 @@
 package testutil
 
 import (
-	"github.com/echovisionlab/aws-weather-updater/lib/constants"
+	"github.com/echovisionlab/aws-weather-updater/pkg/env"
 	"testing"
 )
 
 func ResetDatabaseEnv(t *testing.T) {
-	t.Setenv(constants.DatabaseHost, "")
-	t.Setenv(constants.DatabasePort, "")
-	t.Setenv(constants.DatabaseUser, "")
-	t.Setenv(constants.DatabasePass, "")
-	t.Setenv(constants.DatabaseName, "")
+	t.Setenv(env.DatabaseHost, "")
+	t.Setenv(env.DatabasePort, "")
+	t.Setenv(env.DatabaseUser, "")
+	t.Setenv(env.DatabasePass, "")
+	t.Setenv(env.DatabaseName, "")
 }

@@ -2,7 +2,6 @@ package env
 
 import (
 	"fmt"
-	"github.com/echovisionlab/aws-weather-updater/lib/constants"
 	"os"
 	"strings"
 )
@@ -10,7 +9,7 @@ import (
 func CheckRequiredEnv() error {
 	missing := make([]string, 0)
 
-	for _, key := range []string{constants.DatabaseName, constants.DatabaseUser, constants.DatabasePass} {
+	for _, key := range []string{DatabaseName, DatabaseUser, DatabasePass} {
 		if v := os.Getenv(key); len(v) == 0 {
 			missing = append(missing, key)
 		}
