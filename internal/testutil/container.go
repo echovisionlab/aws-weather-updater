@@ -8,7 +8,6 @@ import (
 	"github.com/testcontainers/testcontainers-go/wait"
 	"log"
 	"math/rand"
-	"os"
 	"path"
 	"regexp"
 	"strings"
@@ -17,11 +16,6 @@ import (
 )
 
 var ProjectRootPattern = regexp.MustCompile(`^(.*aws-weather-updater).*`)
-
-func GetProjectRoot() string {
-	d, _ := os.Getwd()
-	return ProjectRootPattern.FindStringSubmatch(d)[1]
-}
 
 func ShutdownContainer(ctx context.Context, t *testing.T, container testcontainers.Container) {
 	if err := container.Terminate(ctx); err != nil {
@@ -58,7 +52,7 @@ func SetupPostgres(ctx context.Context, t *testing.T) testcontainers.Container {
 	name, user, pass := RandStringBytes(10), RandStringBytes(10), RandStringBytes(10)
 	container, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:latest"),
-		postgres.WithInitScripts(path.Join(GetProjectRoot(), "test", "data", "db.sql")),
+		postgres.WithInitScripts(path.Join(TestDataPath, "db.sql")),
 		postgres.WithDatabase(name),
 		postgres.WithUsername(user),
 		postgres.WithPassword(pass),

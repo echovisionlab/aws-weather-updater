@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const (
+var (
 	measurementBaseUrl = "https://www.weather.go.kr/cgi-bin/aws/nph-aws_txt_min_guide_test"
 	cssSelector        = "body > table:nth-child(2) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody > tr"
 )
@@ -82,7 +82,9 @@ func getObservationTime(p *rod.Page) (time.Time, error) {
 }
 
 func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record) {
-	stations, records := make([]model.Station, 0), make([]model.Record, 0)
+	idx := 0
+	size := len(rows) - 1
+	stations, records := make([]model.Station, size), make([]model.Record, size)
 	for _, row := range rows {
 		// skips initial row
 		if className := row.MustAttribute("class"); className == nil || *className == "name" {
@@ -98,8 +100,8 @@ func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record) {
 		station, record := ParseWeatherData(cols)
 		record.Id = uuid.New()
 		record.Time = at
-		stations = append(stations, station)
-		records = append(records, record)
+		stations[idx] = station
+		records[idx] = record
 	}
 	return stations, records
 }
