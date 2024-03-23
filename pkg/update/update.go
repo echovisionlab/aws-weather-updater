@@ -3,10 +3,10 @@ package update
 import (
 	"context"
 	"fmt"
-	"github.com/echovisionlab/aws-weather-updater/lib/database"
-	"github.com/echovisionlab/aws-weather-updater/lib/model"
-	"github.com/echovisionlab/aws-weather-updater/lib/query"
-	"github.com/echovisionlab/aws-weather-updater/lib/types/fetchresult"
+	"github.com/echovisionlab/aws-weather-updater/pkg/database"
+	"github.com/echovisionlab/aws-weather-updater/pkg/model"
+	"github.com/echovisionlab/aws-weather-updater/pkg/query"
+	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
 	"sync"
 )
 

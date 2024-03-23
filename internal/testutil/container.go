@@ -2,7 +2,7 @@ package testutil
 
 import (
 	"context"
-	"github.com/echovisionlab/aws-weather-updater/lib/constants"
+	"github.com/echovisionlab/aws-weather-updater/pkg/env"
 	"github.com/testcontainers/testcontainers-go"
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
@@ -58,7 +58,7 @@ func SetupPostgres(ctx context.Context, t *testing.T) testcontainers.Container {
 	name, user, pass := RandStringBytes(10), RandStringBytes(10), RandStringBytes(10)
 	container, err := postgres.RunContainer(ctx,
 		testcontainers.WithImage("postgres:latest"),
-		postgres.WithInitScripts(path.Join(GetProjectRoot(), "testdata", "db.sql")),
+		postgres.WithInitScripts(path.Join(GetProjectRoot(), "test", "data", "db.sql")),
 		postgres.WithDatabase(name),
 		postgres.WithUsername(user),
 		postgres.WithPassword(pass),
@@ -78,11 +78,11 @@ func SetupPostgres(ctx context.Context, t *testing.T) testcontainers.Container {
 
 	parts := strings.Split(endpoint, ":")
 
-	t.Setenv(constants.DatabaseName, name)
-	t.Setenv(constants.DatabaseUser, user)
-	t.Setenv(constants.DatabasePass, pass)
-	t.Setenv(constants.DatabaseHost, parts[0])
-	t.Setenv(constants.DatabasePort, parts[1])
+	t.Setenv(env.DatabaseName, name)
+	t.Setenv(env.DatabaseUser, user)
+	t.Setenv(env.DatabasePass, pass)
+	t.Setenv(env.DatabaseHost, parts[0])
+	t.Setenv(env.DatabasePort, parts[1])
 
 	log.Println("database user: ", user)
 	log.Println("database pass: ", pass)

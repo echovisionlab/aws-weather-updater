@@ -1,4 +1,4 @@
-package constants
+package env
 
 const (
 	DatabaseName = "DB_NAME"

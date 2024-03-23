@@ -2,10 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/echovisionlab/aws-weather-updater/lib/database"
-	"github.com/echovisionlab/aws-weather-updater/lib/fetch"
-	"github.com/echovisionlab/aws-weather-updater/lib/types/fetchresult"
-	"github.com/echovisionlab/aws-weather-updater/lib/update"
+	"github.com/echovisionlab/aws-weather-updater/pkg/database"
+	"github.com/echovisionlab/aws-weather-updater/pkg/fetch"
+	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
+	"github.com/echovisionlab/aws-weather-updater/pkg/update"
 	"log/slog"
 	"os"
 	"os/signal"

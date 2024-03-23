@@ -3,9 +3,9 @@ package fetch
 import (
 	"context"
 	"fmt"
-	"github.com/echovisionlab/aws-weather-updater/lib/model"
-	"github.com/echovisionlab/aws-weather-updater/lib/parser"
-	"github.com/echovisionlab/aws-weather-updater/lib/types/fetchresult"
+	"github.com/echovisionlab/aws-weather-updater/pkg/model"
+	"github.com/echovisionlab/aws-weather-updater/pkg/parser"
+	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
 	"github.com/echovisionlab/chromium"
 	"github.com/go-rod/rod"
 	"strings"
