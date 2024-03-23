@@ -5,9 +5,6 @@ import (
 	"fmt"
 	"github.com/echovisionlab/aws-weather-updater/pkg/database"
 	"github.com/echovisionlab/aws-weather-updater/pkg/model"
-	"github.com/echovisionlab/aws-weather-updater/pkg/query"
-	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
-	"sync"
 )
 
 func doUpdate(ctx context.Context, db database.Database, query string, arg interface{}) (int64, error) {
@@ -29,24 +26,10 @@ func doUpdate(ctx context.Context, db database.Database, query string, arg inter
 	return rows, err
 }
 
-// Run updates both stations and records.
-// It will fail fast if given context is either cancelled, timed out.
-// It will also fail fast if anything goes wrong during the process it executes.
-func Run(ctx context.Context, wg *sync.WaitGroup, db database.Database, items fetchresult.FetchResult) error {
-	defer wg.Done()
-	if _, err := updateStations(ctx, db, items.Stations()); err != nil {
-		return fmt.Errorf("failed to update stations: %w", err)
-	}
-	if _, err := updateRecords(ctx, db, items.Records()); err != nil {
-		return fmt.Errorf("failed to update records: %w", err)
-	}
-	return nil
+func Records(ctx context.Context, db database.Database, records []model.Record) (int64, error) {
+	return doUpdate(ctx, db, UpsertRecordQuery, records)
 }
 
-func updateRecords(ctx context.Context, db database.Database, records []model.Record) (int64, error) {
-	return doUpdate(ctx, db, query.UpsertRecordQuery, records)
-}
-
-func updateStations(ctx context.Context, db database.Database, stations []model.Station) (int64, error) {
-	return doUpdate(ctx, db, query.UpsertStationQuery, stations)
+func Stations(ctx context.Context, db database.Database, stations []model.Station) (int64, error) {
+	return doUpdate(ctx, db, UpsertStationQuery, stations)
 }

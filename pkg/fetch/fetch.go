@@ -4,10 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/echovisionlab/aws-weather-updater/pkg/model"
-	"github.com/echovisionlab/aws-weather-updater/pkg/parser"
 	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
-	"github.com/echovisionlab/chromium"
 	"github.com/go-rod/rod"
+	"github.com/google/uuid"
 	"strings"
 	"time"
 )
@@ -17,19 +16,7 @@ const (
 	cssSelector        = "body > table:nth-child(2) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody > tr"
 )
 
-func browser() *chromium.Browser {
-	return chromium.NewBrowser(chromium.NewBrowserOption(1, 0, nil))
-}
-
-func StationsAndRecords(ctx context.Context, t time.Time) (fetchresult.FetchResult, error) {
-	b := browser()
-	p := b.GetPage()
-
-	defer func() {
-		b.PutPage(p)
-		b.CleanUp()
-	}()
-
+func StationsAndRecords(ctx context.Context, p *rod.Page, t time.Time) (fetchresult.FetchResult, error) {
 	strTime := t.Format("200601021504")
 	targetUrl := measurementBaseUrl + "?" + strTime
 	rch := make(chan fetchresult.FetchResult)
@@ -53,7 +40,7 @@ func StationsAndRecords(ctx context.Context, t time.Time) (fetchresult.FetchResu
 	}
 }
 
-func doFetchRecords(p *chromium.Page, targetUrl string) (fetchresult.FetchResult, error) {
+func doFetchRecords(p *rod.Page, targetUrl string) (fetchresult.FetchResult, error) {
 	if err := tryNavigate(p, targetUrl); err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
@@ -71,8 +58,8 @@ func doFetchRecords(p *chromium.Page, targetUrl string) (fetchresult.FetchResult
 	return fetchresult.New(parse(rows, t)), nil
 }
 
-func tryNavigate(p *chromium.Page, url string) error {
-	if err := p.TryNavigate(url); err != nil {
+func tryNavigate(p *rod.Page, url string) error {
+	if err := p.Navigate(url); err != nil {
 		return fmt.Errorf("failed to navigate: %w", err)
 	}
 	if err := p.WaitLoad(); err != nil {
@@ -81,7 +68,7 @@ func tryNavigate(p *chromium.Page, url string) error {
 	return nil
 }
 
-func getObservationTime(p *chromium.Page) (time.Time, error) {
+func getObservationTime(p *rod.Page) (time.Time, error) {
 	elem, err := p.Element(".ehead")
 	if err != nil {
 		return time.Time{}, fmt.Errorf("failed to fetch observation time: %w", err)
@@ -108,7 +95,8 @@ func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record) {
 			continue
 		}
 
-		station, record := parser.ParseWeatherData(cols)
+		station, record := ParseWeatherData(cols)
+		record.Id = uuid.New()
 		record.Time = at
 		stations = append(stations, station)
 		records = append(records, record)

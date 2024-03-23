@@ -1,4 +1,4 @@
-package parser
+package fetch
 
 import (
 	"github.com/echovisionlab/aws-weather-updater/pkg/model"
