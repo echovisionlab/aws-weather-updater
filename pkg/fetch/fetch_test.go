@@ -15,7 +15,8 @@ func Test_StationsAndRecords(t *testing.T) {
 	b, l, err := browser.New()
 
 	if err != nil {
-		t.FailNow()
+		t.Fail()
+		return
 	}
 
 	p, err := b.Page(proto.TargetCreateTarget{
@@ -28,6 +29,11 @@ func Test_StationsAndRecords(t *testing.T) {
 		Background:              false,
 		ForTab:                  false,
 	})
+
+	if err != nil {
+		t.Fail()
+		return
+	}
 
 	backupUrl := measurementBaseUrl
 	measurementBaseUrl = path.Join(testutil.TestDataPath, "test_fetch.html")
