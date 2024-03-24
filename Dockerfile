@@ -11,9 +11,7 @@ RUN go build -o app .
 WORKDIR /dist
 RUN cp /build/app .
 
-FROM alpine:latest
-RUN apk add chromium
-
+FROM ghcr.io/go-rod/rod
 WORKDIR /app
 LABEL org.opencontainers.image.source=https://github.com/echovisionlab/aws-weather-updater
 LABEL org.opencontainers.image.licenses=MIT

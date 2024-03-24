@@ -11,11 +11,13 @@ import (
 	"github.com/madflojo/tasks"
 	"log/slog"
 	"os"
+	"os/signal"
 	"strconv"
+	"syscall"
 	"time"
 )
 
-func Run(ctx context.Context) {
+func Run() {
 	var (
 		db  database.Database
 		b   *rod.Browser
@@ -23,7 +25,13 @@ func Run(ctx context.Context) {
 		err error
 	)
 
+	// prepare
+	exit := make(chan os.Signal, 1)
+	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
+	ctx, cancel := context.WithCancel(context.Background())
+
 	defer func() {
+		cancel()
 		if r := recover(); r != nil {
 			slog.Warn(fmt.Sprintf("recovered from panic: %s", r))
 		}
@@ -65,20 +73,15 @@ func Run(ctx context.Context) {
 	if err != nil {
 		slog.Error(err.Error())
 	}
-
 	slog.Info("starting update...")
-
-	ctx, cancel := context.WithCancel(ctx)
-	defer cancel()
 
 	scheduler := tasks.New()
 	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval)); err != nil {
 		slog.Error(fmt.Sprintf("failed to add task: %s", err.Error()))
 		return
 	}
-	cancel()
-	scheduler.Stop()
-	slog.Info("stopped scheduler. exiting...")
+
+	<-exit
 }
 
 func getInterval() (time.Duration, error) {
