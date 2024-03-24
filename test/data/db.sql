@@ -1,7 +1,7 @@
 create table if not exists public.realtime_weather_station
 (
     id              serial not null
-        constraint location_pkey
+        constraint pk__realtime_weather_station__id
             primary key,
     name            varchar(255),
     altitude        integer,
@@ -12,7 +12,7 @@ create table if not exists public.realtime_weather_station
 create table if not exists public.realtime_weather_record
 (
     id                      uuid default gen_random_uuid() not null
-        constraint pk__realtime_weather_record_id
+        constraint pk__realtime_weather_record__id
             primary key,
     rain_acc                double precision,
     rain_fifteen            double precision,
@@ -28,11 +28,11 @@ create table if not exists public.realtime_weather_record
     moisture                integer,
     sea_level_air_pressure  double precision,
     station_id              integer                        not null
-        constraint fk__station_record_station_id
+        constraint fk__station_id__station_record_station_id
             references public.realtime_weather_station,
     time                    timestamp                      not null
 );
 
-create unique index if not exists uq__realtime_weather_record_time_station_id
+create unique index if not exists uq__realtime_weather_record__time__station_id
     on public.realtime_weather_record (time, station_id);
 

@@ -27,9 +27,17 @@ func doUpdate(ctx context.Context, db database.Database, query string, arg inter
 }
 
 func Records(ctx context.Context, db database.Database, records []model.Record) (int64, error) {
-	return doUpdate(ctx, db, UpsertRecordQuery, records)
+	if n, err := doUpdate(ctx, db, UpsertRecordQuery, records); err != nil {
+		return 0, fmt.Errorf("failed to update records: %w", err)
+	} else {
+		return n, nil
+	}
 }
 
 func Stations(ctx context.Context, db database.Database, stations []model.Station) (int64, error) {
-	return doUpdate(ctx, db, UpsertStationQuery, stations)
+	if n, err := doUpdate(ctx, db, UpsertStationQuery, stations); err != nil {
+		return 0, fmt.Errorf("failed to update stations: %w", err)
+	} else {
+		return n, nil
+	}
 }

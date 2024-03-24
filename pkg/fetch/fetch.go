@@ -55,7 +55,12 @@ func doFetchRecords(p *rod.Page, targetUrl string) (fetchresult.FetchResult, err
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
 
-	return fetchresult.New(parse(rows, t)), nil
+	s, r, err := parse(rows, t)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse: %w", err)
+	}
+
+	return fetchresult.New(s, r), err
 }
 
 func tryNavigate(p *rod.Page, url string) error {
@@ -81,17 +86,23 @@ func getObservationTime(p *rod.Page) (time.Time, error) {
 	return time.Parse("2006.01.02.15:04", dateStr)
 }
 
-func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record) {
+func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record, error) {
 	idx := 0
 	size := len(rows) - 1
 	stations, records := make([]model.Station, size), make([]model.Record, size)
 	for _, row := range rows {
 		// skips initial row
-		if className := row.MustAttribute("class"); className == nil || *className == "name" {
+		if className, err := row.Attribute("class"); err != nil {
+			return nil, nil, err
+		} else if className == nil || *className == "name" {
 			continue
 		}
 
-		cols := row.MustElements("td")
+		cols, err := row.Elements("td")
+		if err != nil {
+			return nil, nil, err
+		}
+
 		// skips invalid row
 		if len(cols) < 20 {
 			continue
@@ -102,6 +113,7 @@ func parse(rows rod.Elements, at time.Time) ([]model.Station, []model.Record) {
 		record.Time = at
 		stations[idx] = station
 		records[idx] = record
+		idx++
 	}
-	return stations, records
+	return stations, records, nil
 }
