@@ -13,10 +13,10 @@ import (
 	"time"
 )
 
-func Update(ctx context.Context, db database.Database, b *rod.Browser) *tasks.Task {
+func Update(ctx context.Context, db database.Database, b *rod.Browser, interval time.Duration) *tasks.Task {
 	return &tasks.Task{
 		TaskContext:            tasks.TaskContext{Context: ctx},
-		Interval:               time.Minute,
+		Interval:               interval,
 		RunSingleInstance:      true,
 		ErrFunc:                nil,
 		ErrFuncWithTaskContext: handleErr,
@@ -25,10 +25,14 @@ func Update(ctx context.Context, db database.Database, b *rod.Browser) *tasks.Ta
 }
 
 func handleErr(taskContext tasks.TaskContext, err error) {
-	if errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded) {
+	if contextError(err) {
 		return
 	}
 	slog.Error(fmt.Sprintf("error during task '%s': %s", taskContext.ID(), err))
+}
+
+func contextError(err error) bool {
+	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
 func doUpdate(db database.Database, b *rod.Browser) func(tasks.TaskContext) error {

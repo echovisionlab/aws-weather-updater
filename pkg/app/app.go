@@ -11,11 +11,11 @@ import (
 	"github.com/madflojo/tasks"
 	"log/slog"
 	"os"
-	"os/signal"
-	"syscall"
+	"strconv"
+	"time"
 )
 
-func Run() {
+func Run(ctx context.Context) {
 	var (
 		db  database.Database
 		b   *rod.Browser
@@ -61,22 +61,35 @@ func Run() {
 	}
 	slog.Info("initialized browser")
 
-	// prepare
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
+	interval, err := getInterval()
+	if err != nil {
+		slog.Error(err.Error())
+	}
+
 	slog.Info("starting update...")
 
-	ctx, cancel := context.WithCancel(context.Background())
+	ctx, cancel := context.WithCancel(ctx)
 	defer cancel()
 
 	scheduler := tasks.New()
-	if err = scheduler.AddWithID("update", task.Update(ctx, db, b)); err != nil {
+	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval)); err != nil {
 		slog.Error(fmt.Sprintf("failed to add task: %s", err.Error()))
 		return
 	}
-
-	<-exit
 	cancel()
 	scheduler.Stop()
 	slog.Info("stopped scheduler. exiting...")
+}
+
+func getInterval() (time.Duration, error) {
+	s := os.Getenv("INTERVAL_SECONDS")
+	if len(s) == 0 {
+		slog.Info("missing INTERVAL_SECONDS environment. setting to default: 1 min")
+		return time.Minute, nil
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return *new(time.Duration), fmt.Errorf("invalid interval_seconds format: %s", s)
+	}
+	return time.Second * time.Duration(v), nil
 }
