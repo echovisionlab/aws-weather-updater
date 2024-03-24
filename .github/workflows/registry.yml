@@ -59,3 +59,25 @@ jobs:
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
           COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
           DIGEST: ${{ steps.build-and-push.outputs.digest }}
+
+      - name: Checkout Deployment Repository
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ secrets.DEPLOY_REPOSITORY }}
+          token: ${{ secrets.CI_TOKEN }}
+          path: deployment
+
+      - name: Update the kustomization.yml file
+        run: |
+          cd deployment
+          IFS=',' read -ra TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
+          NEW_TAG=${TAG_ARRAY[0]}
+          sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${NEW_TAG}|' ${SUB_DIR}
+          git config --global user.name ${{ github.repository_owner }}
+          git config --global user.email '${{ secrets.EMAIL }}'
+          git add ${SUB_DIR}
+          git commit -m "Update image tag to ${{ NEW_TAG }}"
+          git push
+        env:
+          IMAGE_NAME: ${{ vars.REGISTRY_ADDRESS }}/${{ github.repository }}
+          SUB_DIR: ${{ secrets.DEPLOYMENT_SUBDIRECTORY }}
