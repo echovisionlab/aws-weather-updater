@@ -79,7 +79,7 @@ jobs:
           git config --global user.name ${{ github.repository_owner }}
           git config --global user.email '${{ secrets.EMAIL }}'
           git add ${SUB_DIR}
-          git commit -m "Update image tag to ${{ NEW_TAG }}"
+          git commit -m "Update image tag to ${{ env.TAG }}"
           git push
         env:
           IMAGE_NAME: ${{ vars.REGISTRY_ADDRESS }}/${{ github.repository }}
