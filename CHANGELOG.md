@@ -1,3 +1,10 @@
+## [1.0.2](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.1...v1.0.2) (2024-03-24)
+
+
+### Bug Fixes
+
+* updates for alpine chromium ([c70784d](https://github.com/echovisionlab/aws-weather-updater/commit/c70784d8412a332e81ff5b4be9bea6756c40f773))
+
 ## [1.0.1](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.0...v1.0.1) (2024-03-24)
 
 
