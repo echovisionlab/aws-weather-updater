@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/echovisionlab/aws-weather-updater/pkg/model"
-	"github.com/echovisionlab/aws-weather-updater/pkg/type/fetchresult"
+	"github.com/echovisionlab/aws-weather-updater/pkg/types"
 	"github.com/go-rod/rod"
 	"github.com/google/uuid"
 	"strings"
@@ -16,15 +16,22 @@ var (
 	cssSelector        = "body > table:nth-child(2) > tbody:nth-child(1) > tr:nth-child(1) > td:nth-child(1) > table:nth-child(1) > tbody > tr"
 )
 
-func StationsAndRecords(ctx context.Context, p *rod.Page, t time.Time) (fetchresult.FetchResult, error) {
+func StationsAndRecords(ctx context.Context, p *rod.Page, t time.Time, retry int) (types.FetchResult, error) {
 	strTime := t.Format("200601021504")
 	targetUrl := measurementBaseUrl + "?" + strTime
-	rch := make(chan fetchresult.FetchResult)
+	rch := make(chan types.FetchResult)
 	ech := make(chan error)
 
 	go func() {
+		count := 0
+	reset:
 		if res, err := doFetchRecords(p, targetUrl); err != nil {
-			ech <- err
+			if strings.Contains(err.Error(), "net::") && count < retry {
+				count++
+				goto reset
+			} else {
+				ech <- err
+			}
 		} else {
 			rch <- res
 		}
@@ -40,7 +47,7 @@ func StationsAndRecords(ctx context.Context, p *rod.Page, t time.Time) (fetchres
 	}
 }
 
-func doFetchRecords(p *rod.Page, targetUrl string) (fetchresult.FetchResult, error) {
+func doFetchRecords(p *rod.Page, targetUrl string) (types.FetchResult, error) {
 	if err := tryNavigate(p, targetUrl); err != nil {
 		return nil, fmt.Errorf("failed to fetch records: %w", err)
 	}
@@ -60,7 +67,7 @@ func doFetchRecords(p *rod.Page, targetUrl string) (fetchresult.FetchResult, err
 		return nil, fmt.Errorf("failed to parse: %w", err)
 	}
 
-	return fetchresult.New(s, r), err
+	return types.NewFetchResult(s, r), err
 }
 
 func tryNavigate(p *rod.Page, url string) error {

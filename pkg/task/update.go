@@ -13,14 +13,14 @@ import (
 	"time"
 )
 
-func Update(ctx context.Context, db database.Database, b *rod.Browser, interval time.Duration) *tasks.Task {
+func Update(ctx context.Context, db database.Database, b *rod.Browser, interval time.Duration, retry int) *tasks.Task {
 	return &tasks.Task{
 		TaskContext:            tasks.TaskContext{Context: ctx},
 		Interval:               interval,
 		RunSingleInstance:      true,
 		ErrFunc:                nil,
 		ErrFuncWithTaskContext: handleErr,
-		FuncWithTaskContext:    doUpdate(db, b),
+		FuncWithTaskContext:    doUpdate(db, b, retry),
 	}
 }
 
@@ -35,12 +35,12 @@ func contextError(err error) bool {
 	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
-func doUpdate(db database.Database, b *rod.Browser) func(tasks.TaskContext) error {
+func doUpdate(db database.Database, b *rod.Browser, retry int) func(tasks.TaskContext) error {
 	return func(taskContext tasks.TaskContext) error {
 		ctx := taskContext.Context
 		page := b.MustPage()
 		defer page.MustClose()
-		fetched, err := fetch.StationsAndRecords(ctx, page, time.Now())
+		fetched, err := fetch.StationsAndRecords(ctx, page, time.Now(), retry)
 		if err != nil {
 			return err
 		}

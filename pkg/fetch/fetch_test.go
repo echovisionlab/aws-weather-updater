@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/echovisionlab/aws-weather-updater/pkg/browser"
 	"github.com/stretchr/testify/assert"
-	"strings"
 	"testing"
 	"time"
 )
@@ -32,7 +31,7 @@ func Test_StationsAndRecords(t *testing.T) {
 
 		p := b.MustPage()
 		defer p.MustClose()
-		result, err := StationsAndRecords(ctx, p, time.Now())
+		result, err := StationsAndRecords(ctx, p, time.Now(), 5)
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, context.DeadlineExceeded)
@@ -42,7 +41,7 @@ func Test_StationsAndRecords(t *testing.T) {
 		cancel()
 		p := b.MustPage()
 		defer p.MustClose()
-		result, err := StationsAndRecords(ctx, p, time.Now())
+		result, err := StationsAndRecords(ctx, p, time.Now(), 5)
 		assert.Nil(t, result)
 		assert.Error(t, err)
 		assert.ErrorIs(t, err, context.Canceled)
@@ -51,15 +50,7 @@ func Test_StationsAndRecords(t *testing.T) {
 		p := b.MustPage()
 		defer p.MustClose()
 
-		count := 0
-	retry:
-		result, err := StationsAndRecords(context.Background(), p, time.Now())
-		if err != nil && count < 5 {
-			if strings.Contains(err.Error(), "net::") {
-				count++
-				goto retry
-			}
-		}
+		result, err := StationsAndRecords(context.Background(), p, time.Now(), 5)
 
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
