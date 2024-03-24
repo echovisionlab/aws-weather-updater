@@ -1,3 +1,10 @@
+# [1.1.0](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.4...v1.1.0) (2024-03-24)
+
+
+### Features
+
+* set default keep-until days option ([159852d](https://github.com/echovisionlab/aws-weather-updater/commit/159852d29d159d583da8e90e39c40d3e7e4bcbf3))
+
 ## [1.0.4](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.3...v1.0.4) (2024-03-24)
 
 
