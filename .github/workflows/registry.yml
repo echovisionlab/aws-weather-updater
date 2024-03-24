@@ -45,12 +45,15 @@ jobs:
           push: true
   
       - name: Sign image with a key
+        shell: bash
         run: |
-          images=""
-          for tag in ${TAGS}; do
-            images+="${tag}@${DIGEST} "
-          done
-          cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
+            IFS=' ' read -r -a tags_array <<< "${TAGS}"
+            images=""
+            for tag in "${tags_array[@]}"; do
+              images+="${tag}@${DIGEST} "
+            done
+            echo "images set as ${images}"
+            cosign sign --yes --key env://COSIGN_PRIVATE_KEY ${images}
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
           COSIGN_PRIVATE_KEY: ${{ secrets.COSIGN_PRIVATE_KEY }}
