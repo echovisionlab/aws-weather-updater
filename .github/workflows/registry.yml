@@ -70,12 +70,12 @@ jobs:
       - name: Extract and Set New Tag
         run: |
           IFS=' ' read -r -a TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-          echo "NEW_TAG=${TAG_ARRAY[0]}" >> $GITHUB_ENV
+          echo "TAG=${TAG_ARRAY[0]}" >> $GITHUB_ENV
 
       - name: Update the kustomization.yml file
         run: |
           cd deployment
-          sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${NEW_TAG}|' ${SUB_DIR}
+          sed -i 's|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${{ env.TAG }}|' ${SUB_DIR}
           git config --global user.name ${{ github.repository_owner }}
           git config --global user.email '${{ secrets.EMAIL }}'
           git add ${SUB_DIR}
