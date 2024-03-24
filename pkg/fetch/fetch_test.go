@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/echovisionlab/aws-weather-updater/pkg/browser"
 	"github.com/stretchr/testify/assert"
+	"strings"
 	"testing"
 	"time"
 )
@@ -49,7 +50,17 @@ func Test_StationsAndRecords(t *testing.T) {
 	t.Run("must fetch", func(t *testing.T) {
 		p := b.MustPage()
 		defer p.MustClose()
+
+		count := 0
+	retry:
 		result, err := StationsAndRecords(context.Background(), p, time.Now())
+		if err != nil && count < 5 {
+			if strings.Contains(err.Error(), "net::") {
+				count++
+				goto retry
+			}
+		}
+
 		assert.NoError(t, err)
 		assert.NotNil(t, result)
 		if t.Failed() {
