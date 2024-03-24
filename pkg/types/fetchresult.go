@@ -1,4 +1,4 @@
-package fetchresult
+package types
 
 import "github.com/echovisionlab/aws-weather-updater/pkg/model"
 
@@ -20,6 +20,6 @@ func (f *fetchResult) Records() []model.Record {
 	return f.records
 }
 
-func New(stations []model.Station, records []model.Record) FetchResult {
+func NewFetchResult(stations []model.Station, records []model.Record) FetchResult {
 	return &fetchResult{records, stations}
 }

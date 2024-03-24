@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/echovisionlab/aws-weather-updater/pkg/browser"
 	"github.com/echovisionlab/aws-weather-updater/pkg/database"
+	"github.com/echovisionlab/aws-weather-updater/pkg/env"
 	"github.com/echovisionlab/aws-weather-updater/pkg/task"
 	"github.com/go-rod/rod"
 	"github.com/go-rod/rod/lib/launcher"
@@ -67,11 +68,20 @@ func Run(exit <-chan os.Signal) {
 	interval, err := getInterval()
 	if err != nil {
 		slog.Error(err.Error())
+		return
 	}
-	slog.Info("starting update...")
+	slog.Info(fmt.Sprintf("setting interval: %s", interval))
 
+	retry, err := getRetryCount()
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	slog.Info(fmt.Sprintf("setting interval: %d", retry))
+
+	slog.Info("starting update...")
 	scheduler := tasks.New()
-	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval)); err != nil {
+	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval, retry)); err != nil {
 		slog.Error(fmt.Sprintf("failed to add task: %s", err.Error()))
 		return
 	}
@@ -80,7 +90,7 @@ func Run(exit <-chan os.Signal) {
 }
 
 func getInterval() (time.Duration, error) {
-	s := os.Getenv("INTERVAL_SECONDS")
+	s := os.Getenv(env.Interval)
 	if len(s) == 0 {
 		slog.Info("missing INTERVAL_SECONDS environment. setting to default: 1 min")
 		return time.Minute, nil
@@ -90,4 +100,16 @@ func getInterval() (time.Duration, error) {
 		return *new(time.Duration), fmt.Errorf("invalid interval_seconds format: %s", s)
 	}
 	return time.Second * time.Duration(v), nil
+}
+
+func getRetryCount() (int, error) {
+	s := os.Getenv(env.RetryCount)
+	if len(s) == 0 {
+		return 5, nil
+	}
+	v, err := strconv.Atoi(s)
+	if err != nil {
+		return 0, fmt.Errorf("invalid %s: %s", env.RetryCount, s)
+	}
+	return v, nil
 }
