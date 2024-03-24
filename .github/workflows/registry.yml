@@ -7,18 +7,8 @@ on:
   
 jobs:
   build-and-push:
-    strategy:
-      fail-fast: false
-      matrix:
-        platform:
-          - linux/amd64  # x86_64, a typical linux servers
-          - linux/arm64  # AArch64, rasPi >= v5, apple silicon, etc.
     runs-on: ubuntu-latest
     steps:
-      - name: Prepare
-        run: |
-          platform=${{ matrix.platform }}
-          echo "PLATFORM_PAIR=${platform//\//-}" >> $GITHUB_ENV
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
@@ -50,7 +40,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          platforms: ${{ matrix.platform }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           push: true
