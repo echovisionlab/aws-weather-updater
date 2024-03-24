@@ -13,14 +13,14 @@ import (
 	"time"
 )
 
-func Update(ctx context.Context, db database.Database, b *rod.Browser, interval time.Duration, retry int) *tasks.Task {
+func Update(ctx context.Context, db database.Database, b *rod.Browser, interval time.Duration, retry int, keepUntilDays int) *tasks.Task {
 	return &tasks.Task{
 		TaskContext:            tasks.TaskContext{Context: ctx},
 		Interval:               interval,
 		RunSingleInstance:      true,
 		ErrFunc:                nil,
 		ErrFuncWithTaskContext: handleErr,
-		FuncWithTaskContext:    doUpdate(db, b, retry),
+		FuncWithTaskContext:    doUpdate(db, b, retry, keepUntilDays),
 	}
 }
 
@@ -35,7 +35,7 @@ func contextError(err error) bool {
 	return errors.Is(err, context.Canceled) || errors.Is(err, context.DeadlineExceeded)
 }
 
-func doUpdate(db database.Database, b *rod.Browser, retry int) func(tasks.TaskContext) error {
+func doUpdate(db database.Database, b *rod.Browser, retry int, keepUntilDays int) func(tasks.TaskContext) error {
 	return func(taskContext tasks.TaskContext) error {
 		ctx := taskContext.Context
 		page := b.MustPage()
@@ -48,6 +48,9 @@ func doUpdate(db database.Database, b *rod.Browser, retry int) func(tasks.TaskCo
 			return err
 		}
 		if _, err = update.Records(ctx, db, fetched.Records()); err != nil {
+			return err
+		}
+		if _, err = update.ClearBefore(ctx, db, keepUntilDays); err != nil {
 			return err
 		}
 		return nil
