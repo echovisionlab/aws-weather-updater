@@ -12,8 +12,11 @@ WORKDIR /dist
 RUN cp /build/app .
 
 FROM alpine:latest
+RUN apk add chromium
+
 WORKDIR /app
-COPY --from=builder /dist/app /app/
 LABEL org.opencontainers.image.source=https://github.com/echovisionlab/aws-weather-updater
 LABEL org.opencontainers.image.licenses=MIT
+COPY --from=builder /dist/app /app/
+
 ENTRYPOINT ["./app"]
