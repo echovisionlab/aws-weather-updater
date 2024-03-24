@@ -70,7 +70,7 @@ jobs:
       - name: Extract and Set New Tag
         run: |
           IFS=' ' read -r -a TAG_ARRAY <<< "${{ steps.meta.outputs.tags }}"
-          echo "TAG=${TAG_ARRAY[0]}" >> $GITHUB_ENV
+          echo "TAG=${TAG_ARRAY[$((${#TAG_ARRAY[@]} - 1))]}" >> $GITHUB_ENV
 
       - name: Update the kustomization.yml file
         run: |
