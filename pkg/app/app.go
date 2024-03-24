@@ -77,11 +77,18 @@ func Run(exit <-chan os.Signal) {
 		slog.Error(err.Error())
 		return
 	}
-	slog.Info(fmt.Sprintf("setting interval: %d", retry))
+	slog.Info(fmt.Sprintf("setting retry count: %d", retry))
+
+	keepUntilDays, err := getKeepUntilDays()
+	if err != nil {
+		slog.Error(err.Error())
+		return
+	}
+	slog.Info(fmt.Sprintf("setting keep until days: %d", keepUntilDays))
 
 	slog.Info("starting update...")
 	scheduler := tasks.New()
-	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval, retry)); err != nil {
+	if err = scheduler.AddWithID("update", task.Update(ctx, db, b, interval, retry, keepUntilDays)); err != nil {
 		slog.Error(fmt.Sprintf("failed to add task: %s", err.Error()))
 		return
 	}
@@ -103,13 +110,21 @@ func getInterval() (time.Duration, error) {
 }
 
 func getRetryCount() (int, error) {
-	s := os.Getenv(env.RetryCount)
+	return getEnvIntVal(env.RetryCount, 5)
+}
+
+func getKeepUntilDays() (int, error) {
+	return getEnvIntVal(env.KeepUntilDays, 3)
+}
+
+func getEnvIntVal(key string, fallback int) (int, error) {
+	s := os.Getenv(key)
 	if len(s) == 0 {
-		return 5, nil
+		return fallback, nil
 	}
 	v, err := strconv.Atoi(s)
 	if err != nil {
-		return 0, fmt.Errorf("invalid %s: %s", env.RetryCount, s)
+		return 0, fmt.Errorf("invalid %s: %s", key, s)
 	}
 	return v, nil
 }
