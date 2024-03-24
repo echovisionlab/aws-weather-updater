@@ -73,7 +73,7 @@ jobs:
       - name: Update the kustomization.yml file
         run: |
           cd ./deployment
-          sed -i "s|image: ${{ env.IMAGE_NAME }}:.*|image: ${{ env.RELEASE_VERSION }}|" ${{ env.SUB_DIR }}
+          sed -i "s|image: ${{ env.IMAGE_NAME }}:.*|image: ${{ env.IMAGE_NAME }}:${{ env.RELEASE_VERSION }}|" ${{ env.SUB_DIR }}
           if ! git diff --quiet; then
             git config --global user.name ${{ github.repository_owner }}
             git config --global user.email '${{ secrets.EMAIL }}'
