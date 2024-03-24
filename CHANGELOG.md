@@ -1,3 +1,10 @@
+## [1.0.4](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.3...v1.0.4) (2024-03-24)
+
+
+### Bug Fixes
+
+* adds guarding retry for net:: variant errors with default value ([0977978](https://github.com/echovisionlab/aws-weather-updater/commit/097797877483301373e911b0a4167f473db7277f))
+
 ## [1.0.3](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.2...v1.0.3) (2024-03-24)
 
 
