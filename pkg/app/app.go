@@ -11,13 +11,11 @@ import (
 	"github.com/madflojo/tasks"
 	"log/slog"
 	"os"
-	"os/signal"
 	"strconv"
-	"syscall"
 	"time"
 )
 
-func Run() {
+func Run(exit <-chan os.Signal) {
 	var (
 		db  database.Database
 		b   *rod.Browser
@@ -25,9 +23,6 @@ func Run() {
 		err error
 	)
 
-	// prepare
-	exit := make(chan os.Signal, 1)
-	signal.Notify(exit, syscall.SIGINT, syscall.SIGTERM)
 	ctx, cancel := context.WithCancel(context.Background())
 
 	defer func() {

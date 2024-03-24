@@ -4,6 +4,8 @@ import (
 	"context"
 	"github.com/echovisionlab/aws-weather-updater/internal/testutil"
 	"github.com/stretchr/testify/assert"
+	"os"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -14,20 +16,14 @@ func TestRun(t *testing.T) {
 	defer testutil.ShutdownContainer(context.Background(), t, postgres)
 
 	t.Run("must not panic", func(t *testing.T) {
-		t.Run("when context cancelled", func(t *testing.T) {
-			ctx, cancel := context.WithCancel(context.Background())
+		t.Run("operation cancelled", func(t *testing.T) {
+			exit := make(chan os.Signal)
 			go func() {
-				time.AfterFunc(time.Millisecond*30, cancel)
+				<-time.After(time.Millisecond * 100)
+				exit <- syscall.SIGINT
 			}()
 			assert.NotPanics(t, func() {
-				Run(ctx)
-			})
-		})
-		t.Run("when context timeout", func(t *testing.T) {
-			ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-			defer cancel()
-			assert.NotPanics(t, func() {
-				Run(ctx)
+				Run(exit)
 			})
 		})
 	})
