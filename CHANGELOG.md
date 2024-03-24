@@ -1,3 +1,10 @@
+## [1.0.3](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.2...v1.0.3) (2024-03-24)
+
+
+### Bug Fixes
+
+* daemon no longer gets terminated on its own ([c661aa2](https://github.com/echovisionlab/aws-weather-updater/commit/c661aa2d9e044e6f187f6104ad7868b7bd7c740c))
+
 ## [1.0.2](https://github.com/echovisionlab/aws-weather-updater/compare/v1.0.1...v1.0.2) (2024-03-24)
 
 
