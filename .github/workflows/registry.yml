@@ -75,7 +75,7 @@ jobs:
       - name: Update the kustomization.yml file
         run: |
           cd ./deployment
-          sed -i "s|image: ${IMAGE_NAME}:.*|image: ${IMAGE_NAME}:${{ env.TAG }}|" ${SUB_DIR}
+          sed -i "s|image: ${IMAGE_NAME}:.*|image: ${{ env.TAG }}|" ${SUB_DIR}
           git config --global user.name ${{ github.repository_owner }}
           git config --global user.email '${{ secrets.EMAIL }}'
           git add ${SUB_DIR}
