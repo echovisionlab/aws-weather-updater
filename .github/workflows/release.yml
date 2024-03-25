@@ -11,11 +11,6 @@ on:
       - 'LICENSE'
   workflow_dispatch:
 
-env:
-  CONTAINER_REGISTRY: ghcr.io
-  CONTAINER_IMAGE_NAME: ${{ github.repository }}
-  CONTAINER_IMAGE_VERSION: ${{ github.sha }}
-
 jobs:
   test:
     runs-on: ubuntu-latest
